@@ -44,7 +44,7 @@
   <!-- Toast -->
   <div id="toast" class="fixed top-4 right-4 z-50 hidden px-4 py-3 rounded-xl text-xs font-semibold shadow-xl border no-print"></div>
 
-  <!-- Pantalla de Inicio de Sesión (Usuario y Contraseña) -->
+  <!-- Pantalla de Inicio de Sesión -->
   <div id="pantallaLogin" class="min-h-screen flex items-center justify-center p-4 no-print">
     <div class="glass-card w-full max-w-sm rounded-3xl p-6 sm:p-7 space-y-5">
       <div class="flex flex-col items-center text-center">
@@ -64,29 +64,13 @@
       <form id="formLogin" onsubmit="hacerLogin(event)" class="space-y-3.5 text-sm">
         <div>
           <label class="block text-xs text-slate-400 mb-1">Usuario</label>
-          <input
-            type="text"
-            id="login_usuario"
-            required
-            autocomplete="username"
-            placeholder="admin"
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white focus:border-cyan-500 focus:outline-none"
-          />
+          <input type="text" id="login_usuario" required autocomplete="username" placeholder="admin" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white focus:border-cyan-500 focus:outline-none" />
         </div>
         <div>
           <label class="block text-xs text-slate-400 mb-1">Contraseña</label>
-          <input
-            type="password"
-            id="login_password"
-            required
-            autocomplete="current-password"
-            placeholder="••••••••••••"
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white focus:border-cyan-500 focus:outline-none"
-          />
+          <input type="password" id="login_password" required autocomplete="current-password" placeholder="••••••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white focus:border-cyan-500 focus:outline-none" />
         </div>
-
         <div id="loginError" class="hidden text-xs p-2.5 rounded-xl bg-rose-500/15 text-rose-300 border border-rose-500/30"></div>
-
         <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-cyan-500/25 transition">
           Iniciar Sesión
         </button>
@@ -94,39 +78,25 @@
     </div>
   </div>
 
-  <!-- Aplicación Principal (Oculta hasta iniciar sesión) -->
+  <!-- Aplicación Principal -->
   <div id="appContenido" class="hidden">
 
-    <!-- Barra Superior Ejecutiva -->
+    <!-- Barra Superior -->
     <header class="sticky top-0 z-30 backdrop-blur-md bg-[#070b14]/85 border-b border-slate-800/80 no-print">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
-          <img
-            id="logoEmpresa"
-            src="/static/logo.png.jpeg"
-            alt="MEDYSIS Logo"
-            class="w-11 h-11 rounded-xl object-contain bg-white p-1 border border-slate-700/80 shadow-md"
-          />
+          <img id="logoEmpresa" src="/static/logo.png.jpeg" alt="MEDYSIS Logo" class="w-11 h-11 rounded-xl object-contain bg-white p-1 border border-slate-700/80 shadow-md" />
           <div>
             <div class="flex items-center gap-2 flex-wrap">
               <h1 id="nombreEmpresa" class="text-base sm:text-lg font-extrabold tracking-tight text-white">MEDYSIS</h1>
-              <span id="rucEmpresa" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/25">
-                RUC: 4775796-5
-              </span>
+              <span id="rucEmpresa" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/25">RUC: 4775796-5</span>
             </div>
             <p class="text-xs text-slate-400">Control de Ventas & Licencias · Gs. · Clínicas · Institutos · Sorteos</p>
           </div>
         </div>
 
-        <!-- Buscador + Filtros + Acciones -->
         <div class="flex items-center gap-2 flex-wrap w-full lg:w-auto">
-          <input
-            type="text"
-            id="inputBuscar"
-            oninput="cargarDashboard()"
-            placeholder="Buscar cliente, código o tel..."
-            class="bg-slate-900/90 border border-slate-700/80 text-xs sm:text-sm rounded-xl px-3 py-2 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 flex-1 sm:w-44"
-          />
+          <input type="text" id="inputBuscar" oninput="cargarDashboard()" placeholder="Buscar cliente, código o tel..." class="bg-slate-900/90 border border-slate-700/80 text-xs sm:text-sm rounded-xl px-3 py-2 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 flex-1 sm:w-44" />
 
           <select id="filtroRubro" onchange="cargarDashboard()" class="bg-slate-900/90 border border-slate-700/80 text-xs sm:text-sm rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500">
             <option value="todos">Todos los Rubros</option>
@@ -141,29 +111,14 @@
             <option value="local">Solo Local</option>
           </select>
 
-          <button onclick="copiarAliasPago()" title="Copiar Alias / Cuenta" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 text-xs font-semibold px-3 py-2 rounded-xl transition">
-            Alias
-          </button>
-
-          <button onclick="abrirAuditoria()" title="Historial de cambios" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl transition">
-            Auditoría
-          </button>
-
-          <a href="/api/ventas/exportar-csv" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl transition">
-            CSV
-          </a>
-
-          <button onclick="limpiarDatosDemo()" title="Vaciar base para iniciar con clientes reales" class="bg-slate-900 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 text-xs font-semibold px-3 py-2 rounded-xl transition">
-            Vaciar
-          </button>
-
+          <button onclick="copiarAliasPago()" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-300 text-xs font-semibold px-3 py-2 rounded-xl transition">Alias</button>
+          <button onclick="abrirAuditoria()" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl transition">Auditoría</button>
+          <a href="/api/ventas/exportar-csv" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-xl transition">CSV</a>
+          <button onclick="limpiarDatosDemo()" class="bg-slate-900 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 text-xs font-semibold px-3 py-2 rounded-xl transition">Vaciar</button>
           <button onclick="abrirModalVenta()" class="hidden md:inline-flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-semibold text-sm px-4 py-2 rounded-xl shadow-lg shadow-cyan-500/25 transition">
             <span>+ Nueva Venta</span>
           </button>
-
-          <button onclick="cerrarSesion()" title="Cerrar sesión" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300 text-xs font-semibold px-3 py-2 rounded-xl transition">
-            Salir
-          </button>
+          <button onclick="cerrarSesion()" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-amber-300 text-xs font-semibold px-3 py-2 rounded-xl transition">Salir</button>
         </div>
       </div>
     </header>
@@ -182,15 +137,15 @@
         </div>
 
         <div class="glass-card rounded-2xl p-4">
-          <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">MRR SaaS Activo</p>
+          <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Cobro Mensual Fijo</p>
           <h2 id="kpiMrr" class="mt-2 text-base sm:text-lg font-extrabold text-cyan-400">Gs. 0</h2>
-          <p class="mt-1 text-[11px] text-slate-500">Recurrente vigente</p>
+          <p class="mt-1 text-[11px] text-slate-500">Canon mensual activo</p>
         </div>
 
         <div class="glass-card rounded-2xl p-4">
           <p class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">A Cobrar (30d)</p>
           <h2 id="kpiProyeccion30" class="mt-2 text-base sm:text-lg font-extrabold text-amber-400">Gs. 0</h2>
-          <p class="mt-1 text-[11px] text-rose-400">Vencido: <span id="kpiCobroVencido" class="font-bold">Gs. 0</span></p>
+          <p class="mt-1 text-[11px] text-slate-400">Saldos pend.: <span id="kpiSaldosPend" class="text-amber-300 font-bold">Gs. 0</span></p>
         </div>
 
         <div class="glass-card rounded-2xl p-4">
@@ -253,7 +208,7 @@
         <div class="glass-card rounded-2xl p-5 lg:col-span-4">
           <div class="mb-3">
             <h3 class="text-base font-bold text-white">Radar de Cobranza Próxima</h3>
-            <p class="text-xs text-slate-400">Vencido y vencimientos a 7, 15 y 30 días</p>
+            <p class="text-xs text-slate-400">Cánones y saldos a cobrar en 7, 15 y 30 días</p>
           </div>
           <div id="chartProyeccion" class="w-full h-64"></div>
         </div>
@@ -271,8 +226,8 @@
       <section class="glass-card rounded-2xl p-5">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div>
-            <h3 class="text-base font-bold text-white">Control de Licencias, Telemetría y Cobro WhatsApp</h3>
-            <p class="text-xs text-slate-400">Toca el cliente para historial, llama directo o envía cobro por WhatsApp</p>
+            <h3 class="text-base font-bold text-white">Control de Licencias, Canon Mensual y Cobro WhatsApp</h3>
+            <p class="text-xs text-slate-400">Muestra canon mensual, saldo pendiente y fecha de vencimiento real</p>
           </div>
           <select id="filtroEstadoLic" onchange="cargarDashboard()" class="bg-slate-900 border border-slate-700 text-xs rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-500">
             <option value="todos">Todos los estados</option>
@@ -288,8 +243,8 @@
             <thead>
               <tr class="border-b border-slate-800 text-slate-400 text-xs uppercase">
                 <th class="py-2.5 pr-3">Cliente / Licencia</th>
-                <th class="py-2.5 px-2">Monto / Vence</th>
-                <th class="py-2.5 px-2">Última Conexión</th>
+                <th class="py-2.5 px-2">Canon Mensual / Saldo</th>
+                <th class="py-2.5 px-2">Vence / Conexión</th>
                 <th class="py-2.5 px-2">Estado</th>
                 <th class="py-2.5 pl-2 text-right">Acciones</th>
               </tr>
@@ -304,7 +259,7 @@
         <div class="flex items-center justify-between mb-3">
           <div>
             <h3 class="text-base font-bold text-white">Movimientos Comerciales</h3>
-            <p class="text-xs text-slate-400">Emite recibo/comprobante con datos de MEDYSIS, edita o anula</p>
+            <p class="text-xs text-slate-400">Cobros efectivamente ingresados a caja</p>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -315,7 +270,7 @@
                 <th class="py-2.5 px-2">Cliente</th>
                 <th class="py-2.5 px-2">Rubro / Modelo</th>
                 <th class="py-2.5 px-2">Operación / Plan</th>
-                <th class="py-2.5 px-2 text-right">Monto</th>
+                <th class="py-2.5 px-2 text-right">Cobrado</th>
                 <th class="py-2.5 pl-2 text-right">Gestión</th>
               </tr>
             </thead>
@@ -338,7 +293,7 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
           <div>
             <h3 class="text-lg font-bold text-white">Nueva Venta / Renovación (Gs.)</h3>
-            <p class="text-xs text-slate-400">Genera o renueva la licencia automáticamente</p>
+            <p class="text-xs text-slate-400">Separa lo cobrado hoy del canon mensual recurrente</p>
           </div>
           <button onclick="cerrarModalVenta()" class="text-slate-400 hover:text-white text-xl px-2">&times;</button>
         </div>
@@ -346,7 +301,7 @@
         <form id="formVenta" onsubmit="guardarVenta(event)" class="mt-4 space-y-3.5 text-sm">
           <div>
             <label class="block text-xs text-slate-400 mb-1">Cliente o Institución *</label>
-            <input type="text" id="cliente_nombre" required placeholder="Ej: Clínica Santa María" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white focus:border-cyan-500 focus:outline-none" />
+            <input type="text" id="cliente_nombre" required placeholder="Ej: Dra Sofia Fernandez" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white focus:border-cyan-500 focus:outline-none" />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -373,33 +328,46 @@
               <select id="tipo_operacion" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2.5 text-white text-xs">
                 <option value="venta_nueva">Venta Nueva</option>
                 <option value="renovacion">Renovación</option>
-                <option value="upgrade">Upgrade</option>
+                <option value="upgrade">Upgrade / Saldo</option>
                 <option value="soporte">Soporte</option>
               </select>
             </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1">Vigencia *</label>
-              <select id="dias_vigencia" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2.5 text-white text-xs">
-                <option value="30">30 días</option>
-                <option value="90">90 días</option>
-                <option value="365">365 días</option>
+              <select id="dias_vigencia" onchange="ajustarCanonSugerido()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2.5 text-white text-xs">
+                <option value="30">30 días (Mensual)</option>
+                <option value="90">90 días (Trimestral)</option>
+                <option value="365">365 días (Anual)</option>
                 <option value="3650">Perpetua</option>
               </select>
             </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1">Gracia (días)</label>
-              <input type="number" id="dias_gracia" value="3" min="0" max="30" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2.5 text-white text-xs" />
+              <input type="number" id="dias_gracia" value="5" min="0" max="30" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-2.5 text-white text-xs" />
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs text-slate-400 mb-1">Plan / Licencia *</label>
-              <input type="text" id="plan" required placeholder="Ej: Medysis Pro" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
+              <input type="text" id="plan" required placeholder="Ej: Metabolysis" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
             </div>
             <div>
-              <label class="block text-xs text-slate-400 mb-1">Monto (Guaraníes) *</label>
-              <input type="number" step="1" id="monto" required placeholder="1350000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
+              <label class="block text-xs text-slate-400 mb-1">Monto Cobrado Hoy (Gs.) *</label>
+              <input type="number" step="1" id="monto" oninput="ajustarCanonSugerido()" required placeholder="300000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-cyan-300 mb-1">Canon Mensual (Gs.)</label>
+              <input type="number" step="1" id="canon_mensual" placeholder="0 si pagó anual" class="w-full bg-slate-900 border border-cyan-500/40 rounded-xl px-3.5 py-2.5 text-white" />
+              <p class="text-[10px] text-slate-400 mt-1">Ej: 300000 si paga al mes; 0 si pagó 365 días adelantado.</p>
+            </div>
+            <div>
+              <label class="block text-xs text-amber-300 mb-1">Saldo Pendiente (Gs.)</label>
+              <input type="number" step="1" id="saldo_pendiente" value="0" placeholder="Ej: 7500000" class="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-3.5 py-2.5 text-white" />
+              <p class="text-[10px] text-slate-400 mt-1">Ej: 50% restante de setup por cobrar.</p>
             </div>
           </div>
 
@@ -422,7 +390,7 @@
       <div class="bg-[#0d1424] border border-slate-700/80 w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
           <div>
-            <h3 class="text-lg font-bold text-white">Renovar Licencia</h3>
+            <h3 class="text-lg font-bold text-white">Renovar / Cobrar Saldo</h3>
             <p id="renovarSubtitulo" class="text-xs text-cyan-400 font-mono"></p>
           </div>
           <button onclick="cerrarModalRenovar()" class="text-slate-400 hover:text-white text-xl px-2">&times;</button>
@@ -440,18 +408,30 @@
             </select>
           </div>
 
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Monto Cobrado (Guaraníes) *</label>
-            <input type="number" step="1" id="renovar_monto" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Monto Cobrado Hoy (Gs.) *</label>
+              <input type="number" step="1" id="renovar_monto" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
+            </div>
+            <div>
+              <label class="block text-xs text-cyan-300 mb-1">Canon Mensual (Gs.)</label>
+              <input type="number" step="1" id="renovar_canon" class="w-full bg-slate-900 border border-cyan-500/40 rounded-xl px-3.5 py-2.5 text-white" />
+            </div>
           </div>
 
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Plan</label>
-            <input type="text" id="renovar_plan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-amber-300 mb-1">Nuevo Saldo Pendiente (Gs.)</label>
+              <input type="number" step="1" id="renovar_saldo" value="0" class="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-3.5 py-2.5 text-white" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Plan</label>
+              <input type="text" id="renovar_plan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
+            </div>
           </div>
 
           <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 rounded-xl shadow-lg transition">
-            Confirmar Renovación y Registrar Cobro
+            Confirmar Cobro y Actualizar Licencia
           </button>
         </form>
       </div>
@@ -478,9 +458,7 @@
             <label class="block text-xs text-slate-400 mb-1">Fecha de Venta</label>
             <input type="date" id="edit_venta_fecha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
           </div>
-          <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl">
-            Guardar Cambios
-          </button>
+          <button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl">Guardar Cambios</button>
         </form>
       </div>
     </div>
@@ -512,16 +490,10 @@
           </div>
           <button onclick="document.getElementById('modalComprobante').classList.add('hidden')" class="text-slate-400 hover:text-white text-xl px-2 no-print">&times;</button>
         </div>
-
         <div id="compDetalle" class="mt-4 space-y-2.5 text-xs sm:text-sm"></div>
-
         <div class="mt-6 flex gap-2 no-print">
-          <button onclick="window.print()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-2.5 rounded-xl">
-            Imprimir / Guardar PDF
-          </button>
-          <button onclick="document.getElementById('modalComprobante').classList.add('hidden')" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold">
-            Cerrar
-          </button>
+          <button onclick="window.print()" class="flex-1 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold py-2.5 rounded-xl">Imprimir / Guardar PDF</button>
+          <button onclick="document.getElementById('modalComprobante').classList.add('hidden')" class="px-4 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold">Cerrar</button>
         </div>
       </div>
     </div>
@@ -567,6 +539,17 @@
       setTimeout(() => el.classList.add('hidden'), 2600);
     };
 
+    function ajustarCanonSugerido() {
+      const dias = parseInt(document.getElementById('dias_vigencia').value || '30');
+      const monto = document.getElementById('monto').value;
+      const canonInput = document.getElementById('canon_mensual');
+      if (dias === 30) {
+        canonInput.value = monto;
+      } else {
+        canonInput.value = '0';
+      }
+    }
+
     function mostrarLogin(mensajeError = '') {
       document.getElementById('appContenido').classList.add('hidden');
       document.getElementById('pantallaLogin').classList.remove('hidden');
@@ -592,9 +575,7 @@
           empresaGlobal = { ...empresaGlobal, ...data.empresa };
           document.getElementById('loginNombre').textContent = empresaGlobal.nombre;
           document.getElementById('loginRuc').textContent = `RUC: ${empresaGlobal.ruc}`;
-          if (empresaGlobal.logo) {
-            document.getElementById('loginLogo').src = empresaGlobal.logo;
-          }
+          if (empresaGlobal.logo) document.getElementById('loginLogo').src = empresaGlobal.logo;
         }
         if (data.autenticado) {
           mostrarApp();
@@ -679,7 +660,8 @@
       const lic = licenciasCache.find(x => x.id === licId);
       if (!lic) return;
 
-      const montoTexto = formatoGuaranies(lic.monto_referencia);
+      const montoCobrar = (lic.saldo_pendiente > 0 ? lic.saldo_pendiente : (lic.canon_mensual || lic.monto_referencia));
+      const montoTexto = formatoGuaranies(montoCobrar);
       const detalleTiempo = lic.dias_restantes < 0
         ? `venció hace *${Math.abs(lic.dias_restantes)} días* (${lic.vencimiento})`
         : `vence en *${lic.dias_restantes} días* (${lic.vencimiento})`;
@@ -690,7 +672,7 @@
         `Hola *${lic.cliente}*, te saludamos de *${empresaGlobal.nombre}* (RUC: ${empresaGlobal.ruc}).\n` +
         `Te recordamos que tu licencia del plan *${lic.plan}* ` +
         `(Código: \`${lic.codigo}\`) ${detalleTiempo}.\n` +
-        `Monto de renovación: *${montoTexto}*.${lineaAlias}\n` +
+        `Monto a abonar: *${montoTexto}*.${lineaAlias}\n` +
         `Envíanos tu comprobante por aquí para mantener el servicio activo sin interrupciones.`;
 
       const phone = formatearTelefonoPy(lic.telefono);
@@ -706,9 +688,7 @@
 
       document.getElementById('compEmpresaNombre').textContent = empresaGlobal.nombre;
       document.getElementById('compEmpresaRuc').textContent = `RUC: ${empresaGlobal.ruc}`;
-      if (empresaGlobal.logo) {
-        document.getElementById('compLogo').src = empresaGlobal.logo;
-      }
+      if (empresaGlobal.logo) document.getElementById('compLogo').src = empresaGlobal.logo;
 
       document.getElementById('compDetalle').innerHTML = `
         <div class="flex justify-between py-1 border-b border-slate-800/70">
@@ -763,6 +743,7 @@
           <div>
             <div class="font-mono text-cyan-400 font-semibold">${l.codigo} <span class="text-slate-400">(${l.modelo.toUpperCase()})</span></div>
             <div class="text-slate-300 text-xs">${l.plan} · Vence: ${l.vencimiento}</div>
+            <div class="text-xs text-emerald-400">Canon: ${formatoGuaranies(l.canon_mensual)}/mes ${l.saldo_pendiente > 0 ? `· Saldo: ${formatoGuaranies(l.saldo_pendiente)}` : ''}</div>
           </div>
           <div class="text-right text-xs text-slate-400">
             <div>App: ${l.version_app}</div>
@@ -799,7 +780,9 @@
       if (!lic) return;
       document.getElementById('renovar_lic_id').value = lic.id;
       document.getElementById('renovarSubtitulo').textContent = `${lic.cliente} · ${lic.codigo}`;
-      document.getElementById('renovar_monto').value = lic.monto_referencia || '';
+      document.getElementById('renovar_monto').value = lic.saldo_pendiente > 0 ? lic.saldo_pendiente : (lic.canon_mensual || lic.monto_referencia || '');
+      document.getElementById('renovar_canon').value = lic.canon_mensual || 0;
+      document.getElementById('renovar_saldo').value = 0;
       document.getElementById('renovar_plan').value = lic.plan;
       document.getElementById('modalRenovar').classList.remove('hidden');
     }
@@ -811,9 +794,12 @@
     async function confirmarRenovacion(e) {
       e.preventDefault();
       const licId = document.getElementById('renovar_lic_id').value;
+      const canonVal = document.getElementById('renovar_canon').value;
       const payload = {
         dias_vigencia: parseInt(document.getElementById('renovar_dias').value),
         monto: parseFloat(document.getElementById('renovar_monto').value),
+        canon_mensual: canonVal === '' ? null : parseFloat(canonVal),
+        saldo_pendiente: parseFloat(document.getElementById('renovar_saldo').value || '0'),
         plan: document.getElementById('renovar_plan').value
       };
 
@@ -919,18 +905,10 @@
     }
 
     const badgeEstado = (estado, dias) => {
-      if (estado === 'suspendida') {
-        return `<span class="px-2 py-0.5 rounded-full bg-slate-700 text-slate-200 text-xs font-semibold">Suspendida</span>`;
-      }
-      if (estado === 'en_gracia') {
-        return `<span class="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-xs font-semibold">En Gracia (${Math.abs(dias)}d)</span>`;
-      }
-      if (estado === 'vencida') {
-        return `<span class="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 text-xs font-semibold">Vencida (${Math.abs(dias)}d)</span>`;
-      }
-      if (estado === 'por_vencer') {
-        return `<span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-semibold">Vence en ${dias}d</span>`;
-      }
+      if (estado === 'suspendida') return `<span class="px-2 py-0.5 rounded-full bg-slate-700 text-slate-200 text-xs font-semibold">Suspendida</span>`;
+      if (estado === 'en_gracia') return `<span class="px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-300 text-xs font-semibold">En Gracia (${Math.abs(dias)}d)</span>`;
+      if (estado === 'vencida') return `<span class="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 text-xs font-semibold">Vencida (${Math.abs(dias)}d)</span>`;
+      if (estado === 'por_vencer') return `<span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-semibold">Vence en ${dias}d</span>`;
       return `<span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-semibold">Activa (${dias}d)</span>`;
     };
 
@@ -945,15 +923,18 @@
 
     async function guardarVenta(e) {
       e.preventDefault();
+      const canonRaw = document.getElementById('canon_mensual').value;
       const payload = {
         cliente_nombre: document.getElementById('cliente_nombre').value,
         rubro: document.getElementById('rubro').value,
         modelo: document.getElementById('modelo').value,
         tipo_operacion: document.getElementById('tipo_operacion').value,
         dias_vigencia: parseInt(document.getElementById('dias_vigencia').value),
-        dias_gracia: parseInt(document.getElementById('dias_gracia').value || '3'),
+        dias_gracia: parseInt(document.getElementById('dias_gracia').value || '5'),
         plan: document.getElementById('plan').value,
         monto: parseFloat(document.getElementById('monto').value),
+        canon_mensual: canonRaw === '' ? null : parseFloat(canonRaw),
+        saldo_pendiente: parseFloat(document.getElementById('saldo_pendiente').value || '0'),
         moneda: 'PYG',
         telefono: document.getElementById('telefono').value
       };
@@ -1000,13 +981,7 @@
 
       chartEvolucion.setOption({
         backgroundColor: 'transparent',
-        tooltip: {
-          trigger: 'axis',
-          backgroundColor: '#0f172a',
-          borderColor: '#334155',
-          textStyle: { color: '#f8fafc' },
-          valueFormatter: (val) => formatoGuaranies(val)
-        },
+        tooltip: { trigger: 'axis', backgroundColor: '#0f172a', borderColor: '#334155', textStyle: { color: '#f8fafc' }, valueFormatter: (val) => formatoGuaranies(val) },
         legend: { top: 0, textStyle: { color: '#94a3b8' } },
         grid: { left: '3%', right: '3%', bottom: '3%', top: '16%', containLabel: true },
         xAxis: { type: 'category', data: graficos.meses, axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#94a3b8' } },
@@ -1015,46 +990,24 @@
           { name: 'Clínicas', type: 'bar', stack: 'ingresos', barMaxWidth: 28, itemStyle: { color: '#06b6d4' }, data: graficos.clinicas },
           { name: 'Institutos', type: 'bar', stack: 'ingresos', barMaxWidth: 28, itemStyle: { color: '#6366f1' }, data: graficos.institutos },
           { name: 'Sorteos', type: 'bar', stack: 'ingresos', barMaxWidth: 28, itemStyle: { color: '#f59e0b', borderRadius: [4, 4, 0, 0] }, data: graficos.sorteos },
-          {
-            name: 'Total Mes', type: 'line', smooth: true, symbolSize: 8,
-            itemStyle: { color: '#10b981' },
-            lineStyle: { width: 3, color: '#10b981' },
-            data: graficos.total
-          }
+          { name: 'Total Mes', type: 'line', smooth: true, symbolSize: 8, itemStyle: { color: '#10b981' }, lineStyle: { width: 3, color: '#10b981' }, data: graficos.total }
         ]
       });
 
       chartRubros.setOption({
         backgroundColor: 'transparent',
-        tooltip: {
-          trigger: 'item',
-          backgroundColor: '#0f172a',
-          borderColor: '#334155',
-          textStyle: { color: '#f8fafc' },
-          formatter: (p) => `${p.name}: <b>${formatoGuaranies(p.value)}</b> (${p.percent}%)`
-        },
+        tooltip: { trigger: 'item', backgroundColor: '#0f172a', borderColor: '#334155', textStyle: { color: '#f8fafc' }, formatter: (p) => `${p.name}: <b>${formatoGuaranies(p.value)}</b> (${p.percent}%)` },
         legend: { bottom: 0, textStyle: { color: '#94a3b8' } },
         series: [{
-          type: 'pie',
-          radius: ['52%', '76%'],
-          center: ['50%', '44%'],
-          avoidLabelOverlap: true,
-          itemStyle: { borderRadius: 8, borderColor: '#0a0f1c', borderWidth: 3 },
-          label: { show: false },
-          color: ['#06b6d4', '#6366f1', '#f59e0b'],
-          data: graficos.distribucion_rubro
+          type: 'pie', radius: ['52%', '76%'], center: ['50%', '44%'], avoidLabelOverlap: true,
+          itemStyle: { borderRadius: 8, borderColor: '#0a0f1c', borderWidth: 3 }, label: { show: false },
+          color: ['#06b6d4', '#6366f1', '#f59e0b'], data: graficos.distribucion_rubro
         }]
       });
 
       chartSaasLocal.setOption({
         backgroundColor: 'transparent',
-        tooltip: {
-          trigger: 'axis',
-          backgroundColor: '#0f172a',
-          borderColor: '#334155',
-          textStyle: { color: '#f8fafc' },
-          valueFormatter: (val) => formatoGuaranies(val)
-        },
+        tooltip: { trigger: 'axis', backgroundColor: '#0f172a', borderColor: '#334155', textStyle: { color: '#f8fafc' }, valueFormatter: (val) => formatoGuaranies(val) },
         legend: { top: 0, textStyle: { color: '#94a3b8' } },
         grid: { left: '3%', right: '3%', bottom: '3%', top: '18%', containLabel: true },
         xAxis: { type: 'category', data: graficos.meses, axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#94a3b8' } },
@@ -1068,24 +1021,12 @@
       const pc = graficos.proyeccion_cobros;
       chartProyeccion.setOption({
         backgroundColor: 'transparent',
-        tooltip: {
-          trigger: 'axis',
-          backgroundColor: '#0f172a',
-          borderColor: '#334155',
-          textStyle: { color: '#f8fafc' },
-          valueFormatter: (val) => formatoGuaranies(val)
-        },
+        tooltip: { trigger: 'axis', backgroundColor: '#0f172a', borderColor: '#334155', textStyle: { color: '#f8fafc' }, valueFormatter: (val) => formatoGuaranies(val) },
         grid: { left: '3%', right: '4%', bottom: '5%', top: '12%', containLabel: true },
-        xAxis: {
-          type: 'category',
-          data: ['Vencido', '0-7d', '8-15d', '16-30d'],
-          axisLine: { lineStyle: { color: '#334155' } },
-          axisLabel: { color: '#94a3b8' }
-        },
+        xAxis: { type: 'category', data: ['Vencido', '0-7d', '8-15d', '16-30d'], axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#94a3b8' } },
         yAxis: ejeYGuaranies,
         series: [{
-          type: 'bar',
-          barMaxWidth: 32,
+          type: 'bar', barMaxWidth: 32,
           data: [
             { value: pc.vencido, itemStyle: { color: '#f43f5e', borderRadius: [6, 6, 0, 0] } },
             { value: pc.dias_7, itemStyle: { color: '#f59e0b', borderRadius: [6, 6, 0, 0] } },
@@ -1110,9 +1051,7 @@
         empresaGlobal = data.empresa;
         document.getElementById('nombreEmpresa').textContent = empresaGlobal.nombre;
         document.getElementById('rucEmpresa').textContent = `RUC: ${empresaGlobal.ruc}`;
-        if (empresaGlobal.logo) {
-          document.getElementById('logoEmpresa').src = empresaGlobal.logo;
-        }
+        if (empresaGlobal.logo) document.getElementById('logoEmpresa').src = empresaGlobal.logo;
       }
 
       licenciasCache = data.licencias || [];
@@ -1123,7 +1062,7 @@
       document.getElementById('kpiTotal').textContent = formatoGuaranies(k.ingresos_totales);
       document.getElementById('kpiMrr').textContent = formatoGuaranies(k.mrr_estimado);
       document.getElementById('kpiProyeccion30').textContent = formatoGuaranies(k.proyeccion_30d);
-      document.getElementById('kpiCobroVencido').textContent = formatoGuaranies(k.cobro_vencido);
+      document.getElementById('kpiSaldosPend').textContent = formatoGuaranies(k.saldos_pendientes);
       document.getElementById('kpiRetencion').textContent = `${k.tasa_retencion}%`;
       document.getElementById('kpiActivas').textContent = k.lic_activas + k.lic_en_gracia;
       document.getElementById('kpiGraciaBadge').textContent = k.lic_en_gracia > 0 ? `(${k.lic_en_gracia} gracia)` : '';
@@ -1155,7 +1094,14 @@
 
       const tbodyLic = document.getElementById('tablaLicencias');
       tbodyLic.innerHTML = licenciasCache.map(l => {
-        const mostrarWpp = ['por_vencer', 'en_gracia', 'vencida', 'suspendida'].includes(l.estado);
+        const mostrarWpp = ['por_vencer', 'en_gracia', 'vencida', 'suspendida'].includes(l.estado) || l.saldo_pendiente > 0;
+        const textoCanon = l.canon_mensual > 0
+          ? `${formatoGuaranies(l.canon_mensual)}/mes`
+          : `Anual/Único (${formatoGuaranies(l.monto_referencia)})`;
+        const textoSaldo = l.saldo_pendiente > 0
+          ? `<div class="text-amber-300 text-[11px] font-semibold">Saldo pend: ${formatoGuaranies(l.saldo_pendiente)}</div>`
+          : '';
+
         return `
           <tr class="hover:bg-slate-800/30">
             <td class="py-2.5 pr-3">
@@ -1168,31 +1114,19 @@
               </div>
             </td>
             <td class="py-2.5 px-2">
-              <div class="font-semibold text-emerald-400 text-xs">${formatoGuaranies(l.monto_referencia)}</div>
-              <div class="text-slate-400 text-xs">${l.vencimiento}</div>
+              <div class="font-semibold text-emerald-400 text-xs">${textoCanon}</div>
+              ${textoSaldo}
             </td>
             <td class="py-2.5 px-2 text-xs text-slate-400">
-              <div>${l.ultimo_heartbeat}</div>
-              <div class="text-slate-500">${l.version_app}</div>
+              <div class="text-slate-200">${l.vencimiento}</div>
+              <div class="text-slate-500">${l.ultimo_heartbeat}</div>
             </td>
             <td class="py-2.5 px-2">${badgeEstado(l.estado, l.dias_restantes)}</td>
             <td class="py-2.5 pl-2 text-right whitespace-nowrap space-x-1">
-              ${l.telefono ? `
-                <a href="tel:${l.telefono}" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700">
-                  Llamar
-                </a>
-              ` : ''}
-              ${mostrarWpp ? `
-                <button onclick="abrirWhatsAppCobro(${l.id})" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-semibold border border-emerald-500/30">
-                  WPP Cobro
-                </button>
-              ` : ''}
-              <button onclick="abrirModalRenovar(${l.id})" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-semibold border border-cyan-500/30">
-                Renovar
-              </button>
-              <button onclick="alternarSuspension(${l.id}, '${l.estado}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700">
-                ${l.estado === 'suspendida' ? 'Activar' : 'Suspender'}
-              </button>
+              ${l.telefono ? `<a href="tel:${l.telefono}" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700">Llamar</a>` : ''}
+              ${mostrarWpp ? `<button onclick="abrirWhatsAppCobro(${l.id})" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-semibold border border-emerald-500/30">WPP Cobro</button>` : ''}
+              <button onclick="abrirModalRenovar(${l.id})" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-semibold border border-cyan-500/30">Renovar</button>
+              <button onclick="alternarSuspension(${l.id}, '${l.estado}')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700">${l.estado === 'suspendida' ? 'Activar' : 'Suspender'}</button>
             </td>
           </tr>
         `;
@@ -1203,9 +1137,7 @@
         <tr class="hover:bg-slate-800/30">
           <td class="py-2.5 pr-3 text-slate-400 text-xs">${v.fecha_venta}</td>
           <td class="py-2.5 px-2">
-            <button onclick="verFichaCliente(${v.cliente_id})" class="font-medium text-white hover:text-cyan-400 text-left">
-              ${v.cliente}
-            </button>
+            <button onclick="verFichaCliente(${v.cliente_id})" class="font-medium text-white hover:text-cyan-400 text-left">${v.cliente}</button>
           </td>
           <td class="py-2.5 px-2 uppercase text-xs text-slate-300">${v.rubro} · ${v.modelo}</td>
           <td class="py-2.5 px-2 text-slate-300">${v.plan} <span class="text-xs text-slate-500">(${v.tipo_operacion.replace('_', ' ')})</span></td>
