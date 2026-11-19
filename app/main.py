@@ -15,6 +15,7 @@ from fastapi import FastAPI, Depends, Request, Response, HTTPException, Header
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import inspect, text
 from sqlalchemy.orm import Session
 
 from .database import engine, Base, get_db, SessionLocal
@@ -30,6 +31,41 @@ from .schemas import (
 from .seed import poblar_datos_demo
 
 Base.metadata.create_all(bind=engine)
+
+
+def asegurar_columnas_db():
+    """Agrega columnas nuevas sin borrar datos existentes en Render/SQLite."""
+    inspector = inspect(engine)
+    if "licencias" not in inspector.get_table_names():
+        return
+    cols = {c["name"] for c in inspector.get_columns("licencias")}
+    with engine.begin() as conn:
+        if "canon_mensual" not in cols:
+            conn.execute(text("ALTER TABLE licencias ADD COLUMN canon_mensual FLOAT DEFAULT 0"))
+        if "saldo_pendiente" not in cols:
+            conn.execute(text("ALTER TABLE licencias ADD COLUMN saldo_pendiente FLOAT DEFAULT 0"))
+        if "dias_ciclo" not in cols:
+            conn.execute(text("ALTER TABLE licencias ADD COLUMN dias_ciclo INTEGER DEFAULT 30"))
+
+    # Ajusta registros previos: si vencen en >45 días eran anuales/largos (canon_mensual = 0 hasta que toque),
+    # si vencen en <=45 días y canon_mensual es 0, toma monto_referencia como canon mensual.
+    db = SessionLocal()
+    try:
+        for lic in db.query(Licencia).all():
+            duracion = (lic.fecha_vencimiento - (lic.fecha_inicio or date.today())).days
+            if (lic.canon_mensual or 0) == 0 and (lic.monto_referencia or 0) > 0:
+                if duracion <= 45:
+                    lic.canon_mensual = lic.monto_referencia
+                    lic.dias_ciclo = 30
+                else:
+                    lic.canon_mensual = 0.0
+                    lic.dias_ciclo = 365 if duracion <= 400 else 3650
+        db.commit()
+    finally:
+        db.close()
+
+
+asegurar_columnas_db()
 
 ADMIN_USER = os.getenv("ADMIN_USER", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "medysis2026")
@@ -117,7 +153,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="MEDYSIS · Control de Ventas & Licencias Élite",
-    version="3.1.0",
+    version="3.2.0",
     lifespan=lifespan,
 )
 
@@ -134,7 +170,17 @@ def generar_codigo_licencia(rubro: str, modelo: str) -> str:
     return f"{prefijos.get(rubro, 'SYS')}-{date.today().year}-{aleatorio}-{sufijos.get(modelo, 'PRO')}"
 
 
-# --- Endpoints de Autenticación ---
+def calcular_canon_efectivo(canon_input: Optional[float], monto: float, dias_vigencia: int) -> float:
+    """Si el usuario indicó un canon mensual explícito, lo respeta.
+    Si lo dejó vacío: solo si el ciclo es mensual (<=45 días) toma el monto como mensual;
+    si es anual (365) o perpetuo, devuelve 0 porque ya pagó el año por adelantado."""
+    if canon_input is not None:
+        return float(canon_input)
+    if dias_vigencia <= 45:
+        return float(monto)
+    return 0.0
+
+
 @app.get("/api/auth/estado")
 def estado_sesion(request: Request):
     usuario = _sesion_valida(request)
@@ -174,7 +220,6 @@ def cerrar_sesion(response: Response):
     return {"status": "ok"}
 
 
-# --- Endpoints PWA ---
 @app.get("/manifest.json")
 def pwa_manifest():
     return JSONResponse({
@@ -277,9 +322,18 @@ def obtener_metricas_dashboard(
         if ingresos_mes_anterior > 0 else 100.0
     )
 
-    mrr_estimado = sum(
-        v.monto for v in ventas
-        if v.modelo == "saas" and v.fecha_vencimiento >= hoy and v.tipo_operacion in ("venta_nueva", "renovacion")
+    # COBRO MENSUAL FIJO REAL: suma únicamente canon_mensual de las licencias vigentes (no anuales adelantados ni setups)
+    cobro_mensual_fijo = sum(
+        float(l.canon_mensual or 0)
+        for l in todas_licencias_filtro
+        if l.estado in ("activa", "por_vencer", "en_gracia")
+    )
+
+    # Saldos pendientes totales (ej. cuotas de setup por cobrar)
+    saldos_pendientes_total = sum(
+        float(l.saldo_pendiente or 0)
+        for l in todas_licencias_filtro
+        if l.estado != "suspendida"
     )
 
     lic_activas = sum(1 for l in todas_licencias_filtro if l.estado in ("activa", "por_vencer"))
@@ -293,6 +347,7 @@ def obtener_metricas_dashboard(
     vigentes_cartera = lic_activas + lic_en_gracia
     tasa_retencion = round((vigentes_cartera / total_cartera) * 100, 1) if total_cartera > 0 else 100.0
 
+    # Proyección de cobranza próximos 30 días (usa canon_mensual + saldo_pendiente, NO los anuales que vencen en 365d)
     cobro_vencido = 0.0
     cobro_7d = 0.0
     cobro_15d = 0.0
@@ -302,15 +357,19 @@ def obtener_metricas_dashboard(
         if l.estado == "suspendida":
             continue
         dias_rest = (l.fecha_vencimiento - hoy).days
-        monto_ref = float(l.monto_referencia or 0)
+        a_cobrar_ciclo = float(l.canon_mensual or 0) + float(l.saldo_pendiente or 0)
+        # Si es anual y vence dentro de <= 30 días, ahí sí corresponde cobrar su renovación anual
+        if (l.dias_ciclo or 30) >= 365 and dias_rest <= 30 and (l.canon_mensual or 0) == 0:
+            a_cobrar_ciclo += float(l.monto_referencia or 0)
+
         if dias_rest < 0:
-            cobro_vencido += monto_ref
+            cobro_vencido += a_cobrar_ciclo
         elif dias_rest <= 7:
-            cobro_7d += monto_ref
+            cobro_7d += a_cobrar_ciclo
         elif dias_rest <= 15:
-            cobro_15d += monto_ref
+            cobro_15d += a_cobrar_ciclo
         elif dias_rest <= 30:
-            cobro_30d += monto_ref
+            cobro_30d += a_cobrar_ciclo
 
     proyeccion_30d_total = round(cobro_7d + cobro_15d + cobro_30d, 0)
 
@@ -380,10 +439,6 @@ def obtener_metricas_dashboard(
         {"name": "Sorteos", "value": round(sum(v.monto for v in lista_modelo if v.rubro == "sorteos"), 0)},
     ]
 
-    nuevas_mes = round(sum(v.monto for v in ventas if v.fecha_venta >= inicio_mes_actual and v.tipo_operacion == "venta_nueva"), 0)
-    renovaciones_mes = round(sum(v.monto for v in ventas if v.fecha_venta >= inicio_mes_actual and v.tipo_operacion == "renovacion"), 0)
-    upgrades_mes = round(sum(v.monto for v in ventas if v.fecha_venta >= inicio_mes_actual and v.tipo_operacion in ("upgrade", "soporte")), 0)
-
     licencias_detalle = []
     for l in sorted(licencias, key=lambda x: x.fecha_vencimiento):
         dias_restantes = (l.fecha_vencimiento - hoy).days
@@ -397,6 +452,9 @@ def obtener_metricas_dashboard(
             "modelo": l.modelo,
             "plan": l.plan,
             "monto_referencia": round(l.monto_referencia or 0, 0),
+            "canon_mensual": round(l.canon_mensual or 0, 0),
+            "saldo_pendiente": round(l.saldo_pendiente or 0, 0),
+            "dias_ciclo": l.dias_ciclo or 30,
             "vencimiento": l.fecha_vencimiento.isoformat(),
             "dias_restantes": dias_restantes,
             "dias_gracia": l.dias_gracia or 0,
@@ -435,7 +493,8 @@ def obtener_metricas_dashboard(
             "ingresos_totales": round(ingresos_totales, 0),
             "ingresos_mes_actual": round(ingresos_mes_actual, 0),
             "variacion_mes": variacion_mes,
-            "mrr_estimado": round(mrr_estimado, 0),
+            "mrr_estimado": round(cobro_mensual_fijo, 0),
+            "saldos_pendientes": round(saldos_pendientes_total, 0),
             "proyeccion_30d": proyeccion_30d_total,
             "cobro_vencido": round(cobro_vencido, 0),
             "tasa_retencion": tasa_retencion,
@@ -460,12 +519,6 @@ def obtener_metricas_dashboard(
                 "dias_7": round(cobro_7d, 0),
                 "dias_15": round(cobro_15d, 0),
                 "dias_30": round(cobro_30d, 0),
-            },
-            "desglose_mes": {
-                "nuevas": nuevas_mes,
-                "renovaciones": renovaciones_mes,
-                "upgrades": upgrades_mes,
-                "total": round(nuevas_mes + renovaciones_mes + upgrades_mes, 0)
             }
         },
         "top_clientes": top_clientes,
@@ -535,6 +588,8 @@ def detalle_cliente(cliente_id: int, _: str = Depends(requerir_acceso), db: Sess
                 "codigo": l.codigo,
                 "modelo": l.modelo,
                 "plan": l.plan,
+                "canon_mensual": round(l.canon_mensual or 0, 0),
+                "saldo_pendiente": round(l.saldo_pendiente or 0, 0),
                 "estado": l.estado,
                 "vencimiento": l.fecha_vencimiento.isoformat(),
                 "version_app": l.version_app or "-",
@@ -565,6 +620,7 @@ def registrar_venta_rapida(
 ):
     hoy = date.today()
     fecha_venc = hoy + timedelta(days=payload.dias_vigencia)
+    canon = calcular_canon_efectivo(payload.canon_mensual, payload.monto, payload.dias_vigencia)
 
     cliente = db.query(Cliente).filter(
         Cliente.nombre.ilike(payload.cliente_nombre.strip()),
@@ -613,6 +669,9 @@ def registrar_venta_rapida(
         licencia.fecha_vencimiento = base_fecha + timedelta(days=payload.dias_vigencia)
         licencia.plan = payload.plan
         licencia.monto_referencia = payload.monto
+        licencia.canon_mensual = canon
+        licencia.saldo_pendiente = payload.saldo_pendiente
+        licencia.dias_ciclo = payload.dias_vigencia
         licencia.dias_gracia = payload.dias_gracia
         licencia.estado = "activa"
     else:
@@ -624,6 +683,9 @@ def registrar_venta_rapida(
             modelo=payload.modelo,
             plan=payload.plan,
             monto_referencia=payload.monto,
+            canon_mensual=canon,
+            saldo_pendiente=payload.saldo_pendiente,
+            dias_ciclo=payload.dias_vigencia,
             fecha_inicio=hoy,
             fecha_vencimiento=fecha_venc,
             dias_gracia=payload.dias_gracia,
@@ -635,7 +697,7 @@ def registrar_venta_rapida(
     registrar_auditoria(
         db,
         "VENTA / ALTA",
-        f"{cliente.nombre} · {payload.plan} · Gs. {int(payload.monto):,} ({licencia.codigo})"
+        f"{cliente.nombre} · {payload.plan} · Cobrado: Gs. {int(payload.monto):,} · Canon: Gs. {int(canon):,}/mes"
     )
     db.commit()
     db.refresh(licencia)
@@ -711,10 +773,14 @@ def renovar_licencia_rapida(
     base_fecha = lic.fecha_vencimiento if lic.fecha_vencimiento > hoy else hoy
     nueva_fecha = base_fecha + timedelta(days=payload.dias_vigencia)
     plan_final = payload.plan.strip() if payload.plan and payload.plan.strip() else lic.plan
+    canon = calcular_canon_efectivo(payload.canon_mensual, payload.monto, payload.dias_vigencia)
 
     lic.fecha_vencimiento = nueva_fecha
     lic.plan = plan_final
     lic.monto_referencia = payload.monto
+    lic.canon_mensual = canon
+    lic.saldo_pendiente = payload.saldo_pendiente
+    lic.dias_ciclo = payload.dias_vigencia
     lic.estado = "por_vencer" if (nueva_fecha - hoy).days <= 15 else "activa"
 
     venta = Venta(
@@ -728,7 +794,7 @@ def renovar_licencia_rapida(
         metodo_pago=payload.metodo_pago,
         fecha_venta=hoy,
         fecha_vencimiento=nueva_fecha,
-        notas=f"Renovación rápida licencia {lic.codigo} (+{payload.dias_vigencia} días)"
+        notas=f"Renovación licencia {lic.codigo} (+{payload.dias_vigencia} días)"
     )
     db.add(venta)
     registrar_auditoria(
@@ -792,7 +858,7 @@ def validar_y_heartbeat_licencia(payload: LicenciaHeartbeatRequest, db: Session 
 
     aviso = ""
     if lic.estado == "en_gracia":
-        aviso = f"Licencia vencida en período de gracia. Regularizar pago de Gs. {int(lic.monto_referencia or 0):,}."
+        aviso = f"Licencia vencida en período de gracia. Regularizar pago de Gs. {int(lic.canon_mensual or lic.monto_referencia or 0):,}."
     elif lic.estado == "por_vencer":
         aviso = f"Tu licencia vence en {dias_restantes} días ({lic.fecha_vencimiento.isoformat()})."
 
