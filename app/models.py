@@ -28,7 +28,10 @@ class Licencia(Base):
     rubro = Column(String(50), nullable=False)  # sorteos | clinicas | institutos
     modelo = Column(String(30), nullable=False)  # saas | local
     plan = Column(String(80), nullable=False)
-    monto_referencia = Column(Float, default=0.0)
+    monto_referencia = Column(Float, default=0.0)   # Último pago cobrado
+    canon_mensual = Column(Float, default=0.0)      # Lo que paga mensualmente (0 si es anual adelantado o perpetuo)
+    saldo_pendiente = Column(Float, default=0.0)    # Saldo pendiente (ej. 50% restante de setup)
+    dias_ciclo = Column(Integer, default=30)        # 30, 90, 365, 3650
     fecha_inicio = Column(Date, default=date.today)
     fecha_vencimiento = Column(Date, nullable=False)
     dias_gracia = Column(Integer, default=3)
