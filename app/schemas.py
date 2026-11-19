@@ -15,6 +15,8 @@ class VentaRapidaCreate(BaseModel):
     tipo_operacion: str = Field(..., pattern="^(venta_nueva|renovacion|upgrade|soporte)$")
     plan: str = Field(..., min_length=2)
     monto: float = Field(..., gt=0)
+    canon_mensual: Optional[float] = Field(default=None, ge=0)
+    saldo_pendiente: float = Field(default=0.0, ge=0)
     moneda: str = Field(default="PYG")
     metodo_pago: str = Field(default="Transferencia")
     telefono: Optional[str] = None
@@ -36,6 +38,8 @@ class VentaUpdateRequest(BaseModel):
 class LicenciaRenovarRequest(BaseModel):
     dias_vigencia: int = Field(default=30, ge=1)
     monto: float = Field(..., gt=0)
+    canon_mensual: Optional[float] = Field(default=None, ge=0)
+    saldo_pendiente: float = Field(default=0.0, ge=0)
     plan: Optional[str] = None
     metodo_pago: str = Field(default="Transferencia")
 
