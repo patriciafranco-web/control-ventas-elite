@@ -287,13 +287,13 @@
       <span class="text-sm">Registrar Venta</span>
     </button>
 
-    <!-- Modal 1: Nueva Venta -->
+    <!-- Modal 1: Nueva Venta / Pago Pasado -->
     <div id="modalVenta" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 no-print">
       <div class="bg-[#0d1424] border border-slate-700/80 w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 max-h-[92vh] overflow-y-auto shadow-2xl">
         <div class="flex items-center justify-between pb-3 border-b border-slate-800">
           <div>
-            <h3 class="text-lg font-bold text-white">Nueva Venta / Renovación (Gs.)</h3>
-            <p class="text-xs text-slate-400">Separa lo cobrado hoy del canon mensual recurrente</p>
+            <h3 class="text-lg font-bold text-white">Nueva Venta / Pago Pasado (Gs.)</h3>
+            <p class="text-xs text-slate-400">Registra cobros actuales o de meses anteriores en su fecha real</p>
           </div>
           <button onclick="cerrarModalVenta()" class="text-slate-400 hover:text-white text-xl px-2">&times;</button>
         </div>
@@ -353,7 +353,7 @@
               <input type="text" id="plan" required placeholder="Ej: Metabolysis" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
             </div>
             <div>
-              <label class="block text-xs text-slate-400 mb-1">Monto Cobrado Hoy (Gs.) *</label>
+              <label class="block text-xs text-slate-400 mb-1">Monto Cobrado (Gs.) *</label>
               <input type="number" step="1" id="monto" oninput="ajustarCanonSugerido()" required placeholder="300000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
             </div>
           </div>
@@ -371,15 +371,27 @@
             </div>
           </div>
 
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">WhatsApp / Teléfono</label>
-            <input type="text" id="telefono" placeholder="0981123456" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Fecha de Pago (opcional)</label>
+              <input type="date" id="fecha_pago" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
+              <p class="text-[10px] text-slate-400 mt-1">Vacío = hoy; elígela si es un pago pasado.</p>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">WhatsApp / Teléfono</label>
+              <input type="text" id="telefono" placeholder="0981123456" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
+            </div>
           </div>
+
+          <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none pt-1">
+            <input type="checkbox" id="actualizar_licencia" checked class="rounded bg-slate-900 border-slate-600 text-cyan-500 focus:ring-0" />
+            <span>Crear o actualizar licencia y fecha de vencimiento con este registro</span>
+          </label>
 
           <div id="mensajeModal" class="hidden text-xs p-3 rounded-xl"></div>
 
           <button type="submit" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-cyan-500/25 transition">
-            Guardar Operación y Activar Licencia
+            Guardar Operación
           </button>
         </form>
       </div>
@@ -399,18 +411,24 @@
         <form id="formRenovar" onsubmit="confirmarRenovacion(event)" class="mt-4 space-y-3.5 text-sm">
           <input type="hidden" id="renovar_lic_id" />
 
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">Extender Vigencia</label>
-            <select id="renovar_dias" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white">
-              <option value="30">+30 días (Mensual)</option>
-              <option value="90">+90 días (Trimestral)</option>
-              <option value="365">+365 días (Anual)</option>
-            </select>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Extender Vigencia</label>
+              <select id="renovar_dias" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white">
+                <option value="30">+30 días (Mensual)</option>
+                <option value="90">+90 días (Trimestral)</option>
+                <option value="365">+365 días (Anual)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Fecha de Pago (opcional)</label>
+              <input type="date" id="renovar_fecha_pago" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-white" />
+            </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs text-slate-400 mb-1">Monto Cobrado Hoy (Gs.) *</label>
+              <label class="block text-xs text-slate-400 mb-1">Monto Cobrado (Gs.) *</label>
               <input type="number" step="1" id="renovar_monto" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-white" />
             </div>
             <div>
@@ -783,6 +801,7 @@
       document.getElementById('renovar_monto').value = lic.saldo_pendiente > 0 ? lic.saldo_pendiente : (lic.canon_mensual || lic.monto_referencia || '');
       document.getElementById('renovar_canon').value = lic.canon_mensual || 0;
       document.getElementById('renovar_saldo').value = 0;
+      document.getElementById('renovar_fecha_pago').value = '';
       document.getElementById('renovar_plan').value = lic.plan;
       document.getElementById('modalRenovar').classList.remove('hidden');
     }
@@ -795,11 +814,13 @@
       e.preventDefault();
       const licId = document.getElementById('renovar_lic_id').value;
       const canonVal = document.getElementById('renovar_canon').value;
+      const fechaPagoVal = document.getElementById('renovar_fecha_pago').value;
       const payload = {
         dias_vigencia: parseInt(document.getElementById('renovar_dias').value),
         monto: parseFloat(document.getElementById('renovar_monto').value),
         canon_mensual: canonVal === '' ? null : parseFloat(canonVal),
         saldo_pendiente: parseFloat(document.getElementById('renovar_saldo').value || '0'),
+        fecha_pago: fechaPagoVal ? fechaPagoVal : null,
         plan: document.getElementById('renovar_plan').value
       };
 
@@ -913,6 +934,7 @@
     };
 
     function abrirModalVenta() {
+      document.getElementById('actualizar_licencia').checked = true;
       document.getElementById('modalVenta').classList.remove('hidden');
     }
 
@@ -924,6 +946,7 @@
     async function guardarVenta(e) {
       e.preventDefault();
       const canonRaw = document.getElementById('canon_mensual').value;
+      const fechaPagoVal = document.getElementById('fecha_pago').value;
       const payload = {
         cliente_nombre: document.getElementById('cliente_nombre').value,
         rubro: document.getElementById('rubro').value,
@@ -935,6 +958,8 @@
         monto: parseFloat(document.getElementById('monto').value),
         canon_mensual: canonRaw === '' ? null : parseFloat(canonRaw),
         saldo_pendiente: parseFloat(document.getElementById('saldo_pendiente').value || '0'),
+        fecha_pago: fechaPagoVal ? fechaPagoVal : null,
+        actualizar_licencia: document.getElementById('actualizar_licencia').checked,
         moneda: 'PYG',
         telefono: document.getElementById('telefono').value
       };
@@ -951,7 +976,9 @@
         if (!res.ok) throw new Error(data.detail || 'Error al guardar');
 
         msgBox.className = 'text-xs p-3 rounded-xl bg-emerald-500/15 text-emerald-300 border border-emerald-500/30';
-        msgBox.textContent = `Licencia generada: ${data.codigo_licencia} (Vence: ${data.vencimiento})`;
+        msgBox.textContent = data.codigo_licencia !== 'SIN-LICENCIA'
+          ? `Licencia: ${data.codigo_licencia} (Vence: ${data.vencimiento})`
+          : 'Pago histórico guardado correctamente.';
         msgBox.classList.remove('hidden');
 
         document.getElementById('formVenta').reset();
@@ -1023,7 +1050,12 @@
         backgroundColor: 'transparent',
         tooltip: { trigger: 'axis', backgroundColor: '#0f172a', borderColor: '#334155', textStyle: { color: '#f8fafc' }, valueFormatter: (val) => formatoGuaranies(val) },
         grid: { left: '3%', right: '4%', bottom: '5%', top: '12%', containLabel: true },
-        xAxis: { type: 'category', data: ['Vencido', '0-7d', '8-15d', '16-30d'], axisLine: { lineStyle: { color: '#334155' } }, axisLabel: { color: '#94a3b8' } },
+        xAxis: {
+          type: 'category',
+          data: ['Vencido', '0-7d', '8-15d', '16-30d'],
+          axisLine: { lineStyle: { color: '#334155' } },
+          axisLabel: { color: '#94a3b8' }
+        },
         yAxis: ejeYGuaranies,
         series: [{
           type: 'bar', barMaxWidth: 32,
@@ -1126,7 +1158,7 @@
               ${l.telefono ? `<a href="tel:${l.telefono}" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700">Llamar</a>` : ''}
               ${mostrarWpp ? `<button onclick="abrirWhatsAppCobro(${l.id})" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-semibold border border-emerald-500/30">WPP Cobro</button>` : ''}
               <button onclick="abrirModalRenovar(${l.id})" class="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-semibold border border-cyan-500/30">Renovar</button>
-              <button onclick="alternarSuspension(${l.id}, '${l.estado}')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700">${l.estado === 'suspendida' ? 'Activar' : 'Suspender'}</button>
+              <button onclick="alternarSuspension(${l.id}, '${l.estado}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700">${l.estado === 'suspendida' ? 'Activar' : 'Suspender'}</button>
             </td>
           </tr>
         `;
