@@ -21,9 +21,11 @@ class VentaRapidaCreate(BaseModel):
     metodo_pago: str = Field(default="Transferencia")
     telefono: Optional[str] = None
     ciudad: Optional[str] = None
+    fecha_pago: Optional[date] = None
     dias_vigencia: int = Field(default=30, ge=1)
     dias_gracia: int = Field(default=3, ge=0, le=30)
     usuarios_limite: int = Field(default=5, ge=1)
+    actualizar_licencia: bool = Field(default=True)
     notas: Optional[str] = None
 
 
@@ -40,6 +42,7 @@ class LicenciaRenovarRequest(BaseModel):
     monto: float = Field(..., gt=0)
     canon_mensual: Optional[float] = Field(default=None, ge=0)
     saldo_pendiente: float = Field(default=0.0, ge=0)
+    fecha_pago: Optional[date] = None
     plan: Optional[str] = None
     metodo_pago: str = Field(default="Transferencia")
 
