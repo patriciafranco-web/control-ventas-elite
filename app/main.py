@@ -47,8 +47,6 @@ def asegurar_columnas_db():
         if "dias_ciclo" not in cols:
             conn.execute(text("ALTER TABLE licencias ADD COLUMN dias_ciclo INTEGER DEFAULT 30"))
 
-    # Ajusta registros previos: si vencen en >45 días eran anuales/largos (canon_mensual = 0 hasta que toque),
-    # si vencen en <=45 días y canon_mensual es 0, toma monto_referencia como canon mensual.
     db = SessionLocal()
     try:
         for lic in db.query(Licencia).all():
@@ -171,9 +169,6 @@ def generar_codigo_licencia(rubro: str, modelo: str) -> str:
 
 
 def calcular_canon_efectivo(canon_input: Optional[float], monto: float, dias_vigencia: int) -> float:
-    """Si el usuario indicó un canon mensual explícito, lo respeta.
-    Si lo dejó vacío: solo si el ciclo es mensual (<=45 días) toma el monto como mensual;
-    si es anual (365) o perpetuo, devuelve 0 porque ya pagó el año por adelantado."""
     if canon_input is not None:
         return float(canon_input)
     if dias_vigencia <= 45:
