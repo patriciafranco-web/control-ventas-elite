@@ -153,7 +153,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="MEDYSIS · Control de Ventas & Licencias Élite",
-    version="3.2.0",
+    version="3.3.0",
     lifespan=lifespan,
 )
 
@@ -322,14 +322,12 @@ def obtener_metricas_dashboard(
         if ingresos_mes_anterior > 0 else 100.0
     )
 
-    # COBRO MENSUAL FIJO REAL: suma únicamente canon_mensual de las licencias vigentes (no anuales adelantados ni setups)
     cobro_mensual_fijo = sum(
         float(l.canon_mensual or 0)
         for l in todas_licencias_filtro
         if l.estado in ("activa", "por_vencer", "en_gracia")
     )
 
-    # Saldos pendientes totales (ej. cuotas de setup por cobrar)
     saldos_pendientes_total = sum(
         float(l.saldo_pendiente or 0)
         for l in todas_licencias_filtro
@@ -347,7 +345,6 @@ def obtener_metricas_dashboard(
     vigentes_cartera = lic_activas + lic_en_gracia
     tasa_retencion = round((vigentes_cartera / total_cartera) * 100, 1) if total_cartera > 0 else 100.0
 
-    # Proyección de cobranza próximos 30 días (usa canon_mensual + saldo_pendiente, NO los anuales que vencen en 365d)
     cobro_vencido = 0.0
     cobro_7d = 0.0
     cobro_15d = 0.0
@@ -358,7 +355,6 @@ def obtener_metricas_dashboard(
             continue
         dias_rest = (l.fecha_vencimiento - hoy).days
         a_cobrar_ciclo = float(l.canon_mensual or 0) + float(l.saldo_pendiente or 0)
-        # Si es anual y vence dentro de <= 30 días, ahí sí corresponde cobrar su renovación anual
         if (l.dias_ciclo or 30) >= 365 and dias_rest <= 30 and (l.canon_mensual or 0) == 0:
             a_cobrar_ciclo += float(l.monto_referencia or 0)
 
@@ -619,7 +615,8 @@ def registrar_venta_rapida(
     db: Session = Depends(get_db)
 ):
     hoy = date.today()
-    fecha_venc = hoy + timedelta(days=payload.dias_vigencia)
+    fecha_op = payload.fecha_pago or hoy
+    fecha_venc = fecha_op + timedelta(days=payload.dias_vigencia)
     canon = calcular_canon_efectivo(payload.canon_mensual, payload.monto, payload.dias_vigencia)
 
     cliente = db.query(Cliente).filter(
@@ -652,7 +649,7 @@ def registrar_venta_rapida(
         monto=payload.monto,
         moneda="PYG",
         metodo_pago=payload.metodo_pago,
-        fecha_venta=hoy,
+        fecha_venta=fecha_op,
         fecha_vencimiento=fecha_venc,
         notas=payload.notas
     )
@@ -664,49 +661,50 @@ def registrar_venta_rapida(
         Licencia.modelo == payload.modelo
     ).first()
 
-    if licencia and payload.tipo_operacion in ("renovacion", "upgrade", "soporte"):
-        base_fecha = licencia.fecha_vencimiento if licencia.fecha_vencimiento > hoy else hoy
-        licencia.fecha_vencimiento = base_fecha + timedelta(days=payload.dias_vigencia)
-        licencia.plan = payload.plan
-        licencia.monto_referencia = payload.monto
-        licencia.canon_mensual = canon
-        licencia.saldo_pendiente = payload.saldo_pendiente
-        licencia.dias_ciclo = payload.dias_vigencia
-        licencia.dias_gracia = payload.dias_gracia
-        licencia.estado = "activa"
-    else:
-        codigo = generar_codigo_licencia(payload.rubro, payload.modelo)
-        licencia = Licencia(
-            cliente_id=cliente.id,
-            codigo=codigo,
-            rubro=payload.rubro,
-            modelo=payload.modelo,
-            plan=payload.plan,
-            monto_referencia=payload.monto,
-            canon_mensual=canon,
-            saldo_pendiente=payload.saldo_pendiente,
-            dias_ciclo=payload.dias_vigencia,
-            fecha_inicio=hoy,
-            fecha_vencimiento=fecha_venc,
-            dias_gracia=payload.dias_gracia,
-            estado="activa",
-            usuarios_limite=payload.usuarios_limite
-        )
-        db.add(licencia)
+    if payload.actualizar_licencia:
+        if licencia and payload.tipo_operacion in ("renovacion", "upgrade", "soporte"):
+            base_fecha = licencia.fecha_vencimiento if licencia.fecha_vencimiento > hoy else fecha_op
+            licencia.fecha_vencimiento = base_fecha + timedelta(days=payload.dias_vigencia)
+            licencia.plan = payload.plan
+            licencia.monto_referencia = payload.monto
+            licencia.canon_mensual = canon
+            licencia.saldo_pendiente = payload.saldo_pendiente
+            licencia.dias_ciclo = payload.dias_vigencia
+            licencia.dias_gracia = payload.dias_gracia
+            licencia.estado = "activa"
+        elif not licencia:
+            codigo = generar_codigo_licencia(payload.rubro, payload.modelo)
+            licencia = Licencia(
+                cliente_id=cliente.id,
+                codigo=codigo,
+                rubro=payload.rubro,
+                modelo=payload.modelo,
+                plan=payload.plan,
+                monto_referencia=payload.monto,
+                canon_mensual=canon,
+                saldo_pendiente=payload.saldo_pendiente,
+                dias_ciclo=payload.dias_vigencia,
+                fecha_inicio=fecha_op,
+                fecha_vencimiento=fecha_venc,
+                dias_gracia=payload.dias_gracia,
+                estado="activa",
+                usuarios_limite=payload.usuarios_limite
+            )
+            db.add(licencia)
+            db.flush()
 
     registrar_auditoria(
         db,
         "VENTA / ALTA",
-        f"{cliente.nombre} · {payload.plan} · Cobrado: Gs. {int(payload.monto):,} · Canon: Gs. {int(canon):,}/mes"
+        f"{cliente.nombre} · {payload.plan} · Gs. {int(payload.monto):,} ({fecha_op.isoformat()})"
     )
     db.commit()
-    db.refresh(licencia)
 
     return {
         "status": "ok",
-        "mensaje": "Venta y licencia registradas correctamente",
-        "codigo_licencia": licencia.codigo,
-        "vencimiento": licencia.fecha_vencimiento.isoformat()
+        "mensaje": "Venta registrada correctamente",
+        "codigo_licencia": licencia.codigo if licencia else "SIN-LICENCIA",
+        "vencimiento": licencia.fecha_vencimiento.isoformat() if licencia else fecha_venc.isoformat()
     }
 
 
@@ -770,7 +768,8 @@ def renovar_licencia_rapida(
         raise HTTPException(status_code=404, detail="Licencia no encontrada")
 
     hoy = date.today()
-    base_fecha = lic.fecha_vencimiento if lic.fecha_vencimiento > hoy else hoy
+    fecha_op = payload.fecha_pago or hoy
+    base_fecha = lic.fecha_vencimiento if lic.fecha_vencimiento > hoy else fecha_op
     nueva_fecha = base_fecha + timedelta(days=payload.dias_vigencia)
     plan_final = payload.plan.strip() if payload.plan and payload.plan.strip() else lic.plan
     canon = calcular_canon_efectivo(payload.canon_mensual, payload.monto, payload.dias_vigencia)
@@ -792,15 +791,15 @@ def renovar_licencia_rapida(
         monto=payload.monto,
         moneda="PYG",
         metodo_pago=payload.metodo_pago,
-        fecha_venta=hoy,
+        fecha_venta=fecha_op,
         fecha_vencimiento=nueva_fecha,
-        notas=f"Renovación licencia {lic.codigo} (+{payload.dias_vigencia} días)"
+        notas=f"Cobro/renovación licencia {lic.codigo} (+{payload.dias_vigencia} días)"
     )
     db.add(venta)
     registrar_auditoria(
         db,
         "RENOVACIÓN",
-        f"{lic.cliente.nombre} ({lic.codigo}) +{payload.dias_vigencia}d · Gs. {int(payload.monto):,}"
+        f"{lic.cliente.nombre} ({lic.codigo}) +{payload.dias_vigencia}d · Gs. {int(payload.monto):,} ({fecha_op.isoformat()})"
     )
     db.commit()
 
